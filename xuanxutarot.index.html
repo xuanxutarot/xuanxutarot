@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>玄栩｜Active Oracle 命理交互装置</title>
+<meta name="description" content="玄栩个人命理咨询网站：塔罗、雷诺曼、八字、梅花易数，沉浸式 canvas 动效与预约占卜交互。" />
+<style>
+:root{
+  --bg:#02040b;
+  --ink:#06122a;
+  --cyan:#5bf0ff;
+  --blue:#176bff;
+  --violet:#9b6dff;
+  --gold:#f4ce7a;
+  --rose:#ff8ec7;
+  --jade:#7dffd6;
+  --text:#f5fbff;
+  --muted:#9fb3d4;
+  --line:rgba(216,240,255,.18);
+  --glass:rgba(255,255,255,.072);
+  --glass2:rgba(255,255,255,.13);
+  --shadow:0 32px 120px rgba(0,0,0,.46);
+  --serif:ui-serif,"Noto Serif SC","Songti SC","STSong",Georgia,serif;
+  --sans:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;min-height:100vh;color:var(--text);font-family:var(--serif);
+  background:#02040b;overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:-4;pointer-events:none;
+  background:
+    radial-gradient(circle at 18% 10%,rgba(91,240,255,.12),transparent 30%),
+    radial-gradient(circle at 88% 16%,rgba(155,109,255,.15),transparent 34%),
+    radial-gradient(circle at 50% 96%,rgba(244,206,122,.09),transparent 38%),
+    linear-gradient(135deg,#02040b,#071638 54%,#02040b);
+}
+body::after{
+  content:"";position:fixed;inset:0;z-index:50;pointer-events:none;
+  background:
+    linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.015) 1px,transparent 1px),
+    radial-gradient(circle at center,transparent 0 62%,rgba(0,0,0,.42));
+  background-size:72px 72px,72px 72px,cover;
+  mix-blend-mode:screen;opacity:.48;
+}
+a{color:inherit;text-decoration:none}
+button,input,textarea,select{font:inherit}
+button{cursor:pointer}
+::selection{background:rgba(91,240,255,.28)}
+#world{
+  position:fixed;inset:0;width:100%;height:100%;z-index:-2;pointer-events:none;
+}
+#veil{
+  position:fixed;inset:-20%;z-index:-3;pointer-events:none;filter:blur(40px) saturate(140%);
+  background:conic-gradient(from 210deg at 50% 40%,transparent 0deg,rgba(91,240,255,.28) 38deg,rgba(155,109,255,.17) 82deg,transparent 128deg,rgba(244,206,122,.12) 190deg,transparent 260deg);
+  animation:veil 18s ease-in-out infinite alternate;
+}
+@keyframes veil{from{transform:translate3d(-3%,-2%,0) rotate(-5deg) scale(1)}to{transform:translate3d(4%,3%,0) rotate(6deg) scale(1.08)}}
+.cursor{
+  position:fixed;left:0;top:0;z-index:120;pointer-events:none;mix-blend-mode:screen;
+}
+.cursor.dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 22px var(--cyan);transform:translate(-50%,-50%)}
+.cursor.ring{width:48px;height:48px;border:1px solid rgba(216,240,255,.45);border-radius:50%;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s,border .2s}
+.cursor.ring.hot{width:82px;height:82px;background:rgba(244,206,122,.06);border-color:rgba(244,206,122,.7)}
+.shell{width:min(1240px,calc(100% - 32px));margin:0 auto}
+.topbar{
+  position:sticky;top:14px;z-index:80;margin-top:14px;padding:10px;
+  display:grid;grid-template-columns:230px 1fr auto;align-items:center;gap:12px;
+  border:1px solid rgba(216,240,255,.19);border-radius:999px;
+  background:rgba(2,6,18,.64);backdrop-filter:blur(26px);
+  box-shadow:0 22px 80px rgba(0,0,0,.34);
+}
+.brand{display:flex;align-items:center;gap:12px;padding-left:8px}
+.mark{
+  width:48px;height:48px;border-radius:16px;display:grid;place-items:center;
+  color:#020617;font-weight:900;font-size:25px;
+  background:radial-gradient(circle at 30% 22%,#fff 0 12%,transparent 13%),linear-gradient(135deg,#eafaff,var(--cyan),var(--gold));
+  box-shadow:0 0 44px rgba(91,240,255,.35);transform:rotate(-8deg);
+}
+.brand b{display:block;letter-spacing:.24em}
+.brand span{font-family:var(--sans);font-size:12px;color:var(--muted)}
+nav{display:flex;justify-content:center;flex-wrap:wrap;gap:3px}
+nav button,.btn{
+  border:1px solid rgba(216,240,255,.18);border-radius:999px;color:var(--text);
+  background:rgba(255,255,255,.055);padding:10px 13px;
+  font-family:var(--sans);transition:.22s ease;white-space:nowrap;
+}
+nav button{border:0;background:transparent;color:#cce7ff}
+nav button:hover,nav button.active,.btn:hover{
+  color:#fff;background:rgba(91,240,255,.13);transform:translateY(-1px);
+  box-shadow:inset 0 0 0 1px rgba(216,240,255,.12),0 12px 38px rgba(91,240,255,.08);
+}
+.btn.primary{
+  color:#031022;font-weight:900;border:0;
+  background:linear-gradient(135deg,#effdff,var(--cyan) 45%,var(--gold));
+  box-shadow:0 18px 55px rgba(91,240,255,.22);
+}
+.btn.ghost{background:rgba(2,8,24,.42)}
+.btn.small{padding:8px 11px;font-size:12px}
+.menu{display:none}
+main{padding:44px 0 70px}
+.scene{
+  display:none;min-height:calc(100vh - 150px);
+  animation:sceneIn .72s cubic-bezier(.16,.9,.18,1) both;
+}
+.scene.active{display:block}
+@keyframes sceneIn{from{opacity:0;transform:translateY(28px) scale(.985);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+.hero{
+  min-height:calc(100vh - 160px);display:grid;grid-template-columns:1.03fr .97fr;gap:34px;align-items:center;
+}
+.eyebrow{
+  display:inline-flex;gap:10px;align-items:center;padding:9px 13px;border-radius:999px;
+  border:1px solid rgba(91,240,255,.26);background:rgba(255,255,255,.055);
+  backdrop-filter:blur(18px);font-family:var(--sans);color:#dffbff;margin-bottom:20px;
+}
+.blink{width:8px;height:8px;border-radius:50%;background:var(--jade);box-shadow:0 0 22px var(--jade);animation:blink 1.2s ease-in-out infinite alternate}
+@keyframes blink{to{transform:scale(1.9);opacity:.45}}
+h1,h2,h3,p{margin-top:0}
+h1{
+  font-size:clamp(50px,8.4vw,116px);line-height:.88;letter-spacing:-.065em;margin-bottom:24px;
+}
+.shine{
+  color:transparent;background:linear-gradient(100deg,#fff 0%,#c3fbff 26%,#9b6dff 48%,#f4ce7a 72%,#fff 100%);
+  -webkit-background-clip:text;background-clip:text;filter:drop-shadow(0 20px 50px rgba(91,240,255,.15));
+}
+.lead{max-width:760px;color:#d5e8ff;font-size:clamp(17px,2vw,22px);line-height:1.88;margin-bottom:28px}
+.actions,.tags{display:flex;gap:11px;flex-wrap:wrap}
+.tag{
+  border:1px solid rgba(216,240,255,.16);border-radius:999px;padding:8px 11px;
+  color:#c4dbf4;background:rgba(255,255,255,.045);font-family:var(--sans);font-size:12px;
+}
+.portal{
+  position:relative;min-height:640px;display:grid;place-items:center;perspective:1200px;
+}
+.orbit{
+  position:absolute;border-radius:50%;border:1px solid rgba(216,240,255,.17);
+  box-shadow:0 0 90px rgba(91,240,255,.10),inset 0 0 40px rgba(91,240,255,.05);
+  animation:spin 30s linear infinite;
+}
+.o1{width:min(590px,94vw);height:min(590px,94vw)}
+.o2{width:min(455px,76vw);height:min(455px,76vw);border-style:dashed;animation-duration:23s;animation-direction:reverse}
+.o3{width:min(310px,54vw);height:min(310px,54vw);animation-duration:17s}
+.orbit::before,.orbit::after{
+  content:"";position:absolute;width:10px;height:10px;border-radius:50%;left:-5px;top:50%;
+  background:var(--cyan);box-shadow:0 0 24px var(--cyan)
+}
+.orbit::after{left:auto;right:-5px;background:var(--gold);box-shadow:0 0 24px var(--gold)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.oracle-card{
+  position:relative;width:min(430px,88vw);min-height:570px;border-radius:38px;overflow:hidden;
+  border:1px solid rgba(216,240,255,.22);
+  background:linear-gradient(160deg,rgba(255,255,255,.145),rgba(255,255,255,.045)),radial-gradient(circle at 50% 18%,rgba(91,240,255,.22),transparent 43%);
+  backdrop-filter:blur(22px);box-shadow:var(--shadow);transform-style:preserve-3d;transition:transform .12s ease;
+}
+.oracle-card::before{content:"";position:absolute;inset:14px;border-radius:28px;border:1px solid rgba(255,255,255,.14);pointer-events:none}
+.oracle-card::after{
+  content:"";position:absolute;inset:auto -30% -35% -30%;height:260px;
+  background:radial-gradient(ellipse at center,rgba(91,240,255,.18),transparent 62%);animation:breath 3.6s ease-in-out infinite alternate;
+}
+@keyframes breath{to{transform:translateY(-26px);opacity:.55}}
+.sigil{
+  width:205px;height:205px;margin:42px auto 24px;border-radius:50%;padding:1px;
+  background:conic-gradient(var(--cyan),var(--violet),var(--gold),var(--cyan));
+  box-shadow:0 0 90px rgba(91,240,255,.24);animation:spin 14s linear infinite;
+}
+.sigil div{
+  width:100%;height:100%;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle,#0b1b42 0 52%,#02040b 74%);
+  font-size:86px;text-shadow:0 0 36px rgba(91,240,255,.7);animation:counter 14s linear infinite;
+}
+@keyframes counter{to{transform:rotate(-360deg)}}
+.oracle-card h2{text-align:center;font-size:38px;letter-spacing:.3em;margin-bottom:10px}
+.oracle-card p{text-align:center;color:var(--muted);font-family:var(--sans);line-height:1.75}
+.status{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:28px 24px 0}
+.status div{
+  border:1px solid rgba(216,240,255,.15);border-radius:18px;background:rgba(255,255,255,.052);padding:13px;
+}
+.status small{display:block;color:var(--muted);font-family:var(--sans)}
+.status b{display:block;margin-top:6px}
+.section-head{margin:26px 0 24px}
+.kicker{font-family:var(--sans);font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);margin-bottom:10px}
+h2.title{font-size:clamp(34px,5.4vw,68px);line-height:1.03;letter-spacing:-.055em;margin-bottom:14px}
+.desc{max-width:850px;color:#d2e6ff;line-height:1.88;font-size:17px}
+.grid{display:grid;gap:18px}
+.cols2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cols3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.panel{
+  position:relative;overflow:hidden;border:1px solid var(--line);border-radius:30px;padding:24px;
+  background:linear-gradient(160deg,rgba(255,255,255,.10),rgba(255,255,255,.043)),radial-gradient(circle at 10% 8%,rgba(91,240,255,.11),transparent 34%);
+  backdrop-filter:blur(22px);box-shadow:0 28px 90px rgba(0,0,0,.24);
+}
+.panel::after{content:"";position:absolute;right:-85px;bottom:-95px;width:230px;height:230px;border-radius:50%;background:radial-gradient(circle,rgba(91,240,255,.12),transparent 68%);pointer-events:none}
+.panel h3{font-size:25px;margin-bottom:12px}
+.panel p{color:var(--muted);line-height:1.82}
+.icon{
+  width:56px;height:56px;border-radius:19px;display:grid;place-items:center;font-size:27px;margin-bottom:16px;
+  border:1px solid rgba(216,240,255,.18);background:linear-gradient(135deg,rgba(91,240,255,.18),rgba(244,206,122,.10));
+}
+.service-card{min-height:260px;transform-style:preserve-3d;transition:.25s ease}
+.service-card:hover{transform:translateY(-8px) rotateX(2deg);border-color:rgba(91,240,255,.48)}
+.steps{display:grid;gap:13px}
+.step{display:grid;grid-template-columns:50px 1fr;gap:14px}
+.num{
+  width:50px;height:50px;border-radius:18px;display:grid;place-items:center;color:#031022;font-weight:900;
+  background:linear-gradient(135deg,#effdff,var(--cyan));
+}
+.step b{display:block;margin-bottom:5px}.step span{color:var(--muted);line-height:1.75}
+label{display:grid;gap:7px;color:#dff2ff;font-family:var(--sans);font-size:14px}
+input,select,textarea{
+  width:100%;color:var(--text);background:rgba(1,8,22,.62);border:1px solid rgba(216,240,255,.18);
+  border-radius:18px;padding:13px 14px;outline:0;transition:.2s ease;
+}
+input:focus,select:focus,textarea:focus{border-color:rgba(91,240,255,.68);box-shadow:0 0 0 4px rgba(91,240,255,.12)}
+textarea{min-height:118px;resize:vertical}option{color:#061225}
+.form{display:grid;gap:14px}
+.slot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.slot{
+  border:1px solid rgba(216,240,255,.18);border-radius:16px;padding:11px 8px;color:#dff7ff;background:rgba(255,255,255,.052);transition:.2s ease
+}
+.slot:hover,.slot.selected{background:linear-gradient(135deg,#effdff,var(--cyan));color:#031022}
+.letter{
+  position:relative;min-height:420px;border-radius:31px;padding:28px;color:#081225;
+  background:linear-gradient(135deg,rgba(247,252,255,.96),rgba(223,246,255,.90));
+  box-shadow:0 30px 100px rgba(0,0,0,.3);transform:rotate(-1deg);overflow:hidden;
+}
+.letter::before{content:"玄栩";position:absolute;right:26px;top:22px;width:70px;height:70px;border-radius:50%;display:grid;place-items:center;border:2px solid rgba(178,32,56,.36);color:rgba(178,32,56,.62);font-weight:900;transform:rotate(13deg)}
+.letter h3{color:#081225}.letter .btn{color:#061225;border-color:rgba(6,18,42,.18);background:rgba(6,18,42,.06)}
+.result{
+  min-height:86px;border:1px dashed rgba(91,240,255,.34);border-radius:22px;background:rgba(91,240,255,.052);
+  padding:16px;color:#dceeff;line-height:1.82;white-space:pre-wrap;
+}
+.letter .result{color:#13233d;background:rgba(10,69,200,.052);border-color:rgba(10,69,200,.20)}
+.ritual{display:grid;grid-template-columns:.9fr 1.1fr;gap:20px;align-items:start}
+.ritual-canvas-wrap{
+  position:relative;height:520px;border-radius:30px;overflow:hidden;border:1px solid var(--line);
+  background:radial-gradient(circle at 50% 35%,rgba(91,240,255,.13),transparent 40%),rgba(255,255,255,.04);
+}
+#ritualCanvas{position:absolute;inset:0;width:100%;height:100%}
+.deck-button{
+  position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:240px;aspect-ratio:2/3.25;border-radius:30px;border:1px solid rgba(216,240,255,.28);
+  background:radial-gradient(circle at 50% 38%,rgba(91,240,255,.20),transparent 32%),linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.04)),#061638;
+  box-shadow:var(--shadow);overflow:hidden;transition:.35s cubic-bezier(.2,.9,.2,1);
+}
+.deck-button:hover{transform:translate(-50%,-50%) scale(1.04) rotateY(-10deg)}
+.deck-button.shake{animation:shuffle .7s ease-in-out 2}
+@keyframes shuffle{0%,100%{translate:0 0;rotate:0deg}24%{translate:-22px 0;rotate:-4deg}58%{translate:24px -4px;rotate:5deg}}
+.deck-button::before,.deck-button::after{content:"";position:absolute;inset:18px;border:1px solid rgba(244,206,122,.36);border-radius:22px}
+.deck-button::after{
+  inset:43px;border-color:rgba(216,240,255,.20);
+  background:linear-gradient(45deg,transparent 48%,rgba(91,240,255,.26) 49% 51%,transparent 52%),linear-gradient(-45deg,transparent 48%,rgba(244,206,122,.18) 49% 51%,transparent 52%)
+}
+.deck-button span{position:absolute;inset:0;display:grid;place-items:center;font-size:82px;text-shadow:0 0 40px rgba(91,240,255,.65)}
+.draw-area{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
+.drawn{
+  border:1px solid var(--line);border-radius:25px;background:rgba(255,255,255,.06);padding:12px;
+  animation:flipIn .72s cubic-bezier(.16,1,.3,1) both;transform-style:preserve-3d
+}
+@keyframes flipIn{from{opacity:0;transform:translateY(26px) rotateY(100deg) scale(.92);filter:blur(8px)}to{opacity:1;transform:none;filter:none}}
+.drawn.reversed img{transform:rotate(180deg)}
+.card-img{width:100%;display:block;aspect-ratio:2/3.28;border-radius:19px;border:1px solid rgba(244,206,122,.25);object-fit:cover;background:#061225}
+.meta{display:flex;justify-content:space-between;color:var(--gold);font-family:var(--sans);font-size:12px;margin:10px 0 6px}
+.drawn h4{font-size:18px;margin-bottom:7px}.drawn p{font-size:14px;line-height:1.7;margin:0 0 8px;color:var(--muted)}
+.library-tools{display:grid;grid-template-columns:1fr auto;gap:10px;margin:16px 0}
+.tarot-library{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:10px;max-height:600px;overflow:auto;padding-right:6px}
+.mini-card{border:1px solid rgba(216,240,255,.14);border-radius:17px;background:rgba(255,255,255,.045);padding:7px;transition:.2s ease}
+.mini-card:hover{transform:translateY(-5px);border-color:rgba(91,240,255,.55)}
+.mini-card img{width:100%;display:block;border-radius:12px;aspect-ratio:2/3.28;object-fit:cover}
+.mini-card span{display:block;margin-top:5px;text-align:center;color:#d8f2ff;font-family:var(--sans);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.leno-board{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;position:relative}
+.leno{
+  min-height:250px;border:1px solid var(--line);border-radius:26px;padding:18px;text-align:center;background:radial-gradient(circle at 50% 20%,rgba(91,240,255,.12),transparent 38%),rgba(255,255,255,.055);
+  animation:rise .52s ease both;transition:.25s ease
+}
+.leno:hover{transform:translateY(-7px)}
+@keyframes rise{from{opacity:0;transform:translateY(20px) scale(.96)}to{opacity:1;transform:none}}
+.leno .big{font-size:62px;margin:12px 0;text-shadow:0 0 34px rgba(91,240,255,.34)}
+.bazi{display:grid;grid-template-columns:.88fr 1.12fr;gap:20px;align-items:start}
+.astro{
+  width:min(540px,100%);aspect-ratio:1;margin:0 auto 18px;position:relative;border-radius:50%;
+  border:1px solid rgba(216,240,255,.18);
+  background:radial-gradient(circle,rgba(91,240,255,.14),transparent 30%),conic-gradient(from 0deg,rgba(91,240,255,.18),rgba(155,109,255,.09),rgba(244,206,122,.12),rgba(91,240,255,.18));
+  box-shadow:inset 0 0 80px rgba(2,6,18,.80),0 0 80px rgba(91,240,255,.08);overflow:hidden;
+}
+.astro::before,.astro::after{content:"";position:absolute;border:1px solid rgba(255,255,255,.13);border-radius:50%}.astro::before{inset:12%}.astro::after{inset:28%}
+.pillar{
+  position:absolute;width:96px;height:96px;border-radius:25px;display:grid;place-items:center;text-align:center;
+  background:rgba(2,8,24,.69);border:1px solid rgba(216,240,255,.20);backdrop-filter:blur(16px);box-shadow:0 20px 55px rgba(0,0,0,.28);
+}
+.pillar small{display:block;color:var(--muted);font-family:var(--sans);font-size:11px;letter-spacing:.16em}
+.pillar b{display:block;font-size:28px;color:#fff;margin-top:5px}.pillar span{display:block;color:var(--gold);font-size:12px;margin-top:3px}
+.p-year{left:50%;top:6%;transform:translateX(-50%)}.p-month{right:6%;top:50%;transform:translateY(-50%)}.p-day{left:50%;bottom:6%;transform:translateX(-50%)}.p-hour{left:6%;top:50%;transform:translateY(-50%)}
+.center{position:absolute;inset:38%;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#effdff,var(--cyan));color:#031022;font-weight:900;font-size:38px;box-shadow:0 0 48px rgba(91,240,255,.38)}
+.bars{display:grid;gap:10px}.bar-row{display:grid;grid-template-columns:42px 1fr 34px;gap:9px;align-items:center;color:#d8f2ff;font-family:var(--sans)}
+.bar{height:12px;border-radius:999px;background:rgba(255,255,255,.075);border:1px solid rgba(216,240,255,.12);overflow:hidden}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--gold));transition:width .65s ease}
+.contact{display:grid;gap:12px}.contact-item{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid rgba(216,240,255,.16);border-radius:22px;padding:15px;background:rgba(255,255,255,.052)}
+.contact-item b{display:block}.contact-item span{display:block;color:var(--muted);font-family:var(--sans);margin-top:4px}
+.modal{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(1,4,12,.72);backdrop-filter:blur(16px)}
+.modal.active{display:flex}
+.modal-card{width:min(910px,100%);max-height:88vh;overflow:auto;border:1px solid rgba(216,240,255,.22);border-radius:32px;background:linear-gradient(145deg,rgba(5,18,45,.98),rgba(2,8,22,.96));box-shadow:var(--shadow);padding:20px}
+.modal-body{display:grid;grid-template-columns:270px 1fr;gap:20px;align-items:start}.modal-body img{width:100%;display:block;border-radius:22px;border:1px solid rgba(244,206,122,.25)}
+.close{float:right}
+.toast{position:fixed;left:50%;bottom:26px;z-index:130;opacity:0;pointer-events:none;transform:translateX(-50%) translateY(16px);transition:.25s ease;border:1px solid rgba(91,240,255,.28);border-radius:999px;padding:12px 18px;background:rgba(2,8,24,.88);box-shadow:var(--shadow);font-family:var(--sans)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.scene-rail{position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:70;display:grid;gap:10px}
+.rail-dot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(216,240,255,.34);background:rgba(255,255,255,.08);transition:.2s}
+.rail-dot.active{height:34px;border-radius:99px;background:linear-gradient(var(--cyan),var(--gold));border:0}
+footer{border-top:1px solid rgba(216,240,255,.12);padding:32px 0 54px;text-align:center;color:var(--muted);font-family:var(--sans)}
+@media(max-width:1060px){
+  .topbar{grid-template-columns:1fr auto;border-radius:28px}.topbar>.btn.primary{display:none}nav{display:none;grid-column:1/-1;justify-content:flex-start}.menu{display:inline-flex}nav.open{display:flex}
+  .hero,.ritual,.bazi,.cols2{grid-template-columns:1fr}.portal{min-height:610px}.cols3{grid-template-columns:repeat(2,1fr)}.tarot-library{grid-template-columns:repeat(5,1fr)}
+}
+@media(max-width:680px){
+  .shell{width:min(100% - 22px,1240px)}.cursor{display:none}.brand span{display:none}.hero{min-height:auto}.portal{min-height:540px}
+  .status,.cols3,.slot-grid,.draw-area,.leno-board{grid-template-columns:1fr}.tarot-library{grid-template-columns:repeat(3,1fr)}.library-tools{grid-template-columns:1fr}
+  .modal-body{grid-template-columns:1fr}.scene-rail{display:none}.ritual-canvas-wrap{height:450px}.pillar{width:82px;height:82px;border-radius:21px}.pillar b{font-size:23px}
+}
+</style>
+</head>
+<body>
+<canvas id="world"></canvas>
+<div id="veil"></div>
+<div class="cursor dot" id="cdot"></div>
+<div class="cursor ring" id="cring"></div>
+
+<header class="shell topbar">
+  <a class="brand" href="#home" data-scene="home"><div class="mark">玄</div><div><b>玄栩</b><span>Active Oracle Installation</span></div></a>
+  <nav id="nav">
+    <button class="active" data-scene="home">入口</button>
+    <button data-scene="about">关于</button>
+    <button data-scene="services">咨询</button>
+    <button data-scene="booking">预约</button>
+    <button data-scene="tarot">塔罗</button>
+    <button data-scene="lenormand">雷诺曼</button>
+    <button data-scene="bazi">八字</button>
+    <button data-scene="contact">联系</button>
+  </nav>
+  <button class="btn ghost menu" id="menu">菜单</button>
+  <button class="btn primary" data-scene="booking">今晚预约</button>
+</header>
+
+<div class="scene-rail" id="rail"></div>
+
+<main class="shell">
+  <section class="scene active" id="scene-home">
+    <div class="hero">
+      <div>
+        <div class="eyebrow"><span class="blink"></span> 鼠标移动、点击、滚轮切换场景</div>
+        <h1><span class="shine">玄栩</span><br>命理交互装置</h1>
+        <p class="lead">这里不再是“网页”，而是一座可被触碰的蓝色神谕场。星轨会跟随你的鼠标偏移，点击会爆出符文，滚动会把命理空间切换成不同形态。</p>
+        <div class="actions">
+          <button class="btn primary" data-scene="tarot">进入塔罗仪式</button>
+          <button class="btn" data-scene="bazi">打开八字星盘</button>
+          <button class="btn ghost" data-scene="booking">生成预约信笺</button>
+        </div>
+        <div class="tags" style="margin-top:18px"><span class="tag">塔罗牌</span><span class="tag">雷诺曼</span><span class="tag">八字命理</span><span class="tag">梅花易数</span><span class="tag">汉传佛教学习</span></div>
+      </div>
+      <div class="portal">
+        <div class="orbit o1"></div><div class="orbit o2"></div><div class="orbit o3"></div>
+        <article class="oracle-card" id="tilt">
+          <div class="sigil"><div>☽</div></div>
+          <h2>玄 栩</h2>
+          <p>Douyin：1279819076a<br>WeChat：Xiangxutarot · QQ：2726897200</p>
+          <div class="status">
+            <div><small>预约时段</small><b>18:00-22:00</b></div><div><small>咨询方式</small><b>私密 1:1</b></div>
+            <div><small>读牌风格</small><b>清醒直给</b></div><div><small>视觉方向</small><b>Canvas 神谕场</b></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene" id="scene-about">
+    <div class="section-head"><div class="kicker">About Xuanxu</div><h2 class="title">用清晰的语言，翻译神秘的图像</h2><p class="desc">我是玄栩，塔罗师兼八字命理分析师。我的咨询融合塔罗牌、雷诺曼、八字、梅花易数，以及汉传佛教学习中的观照视角。解读重点是把问题拆清楚，而不是制造焦虑。</p></div>
+    <div class="grid cols2">
+      <article class="panel"><div class="icon">✦</div><h3>个人信息</h3><p>网名：玄栩<br>抖音号：1279819076a<br>微信：Xiangxutarot<br>QQ：2726897200</p><div class="tags"><span class="tag">高级蓝调</span><span class="tag">专业命理</span><span class="tag">沉浸互动</span></div></article>
+      <article class="panel"><div class="icon">☉</div><h3>咨询路径</h3><div class="steps"><div class="step"><div class="num">01</div><div><b>先定问题</b><span>明确你真正想问的是关系、选择、趋势，还是内在卡点。</span></div></div><div class="step"><div class="num">02</div><div><b>多系统交叉</b><span>塔罗看能量，雷诺曼看线索，八字看结构，梅花易数看取象。</span></div></div><div class="step"><div class="num">03</div><div><b>落到行动</b><span>最后给出可执行建议，让答案真正回到现实。</span></div></div></div></article>
+    </div>
+  </section>
+
+  <section class="scene" id="scene-services">
+    <div class="section-head"><div class="kicker">Services</div><h2 class="title">咨询项目</h2><p class="desc">每一种工具都像不同的镜头。塔罗看当前场域，雷诺曼追踪事件路径，八字看命局结构，梅花易数捕捉瞬间之象。</p></div>
+    <div class="grid cols3">
+      <article class="panel service-card"><div class="icon">☾</div><h3>塔罗牌咨询</h3><p>关系、事业、选择、复合、对方想法、近期趋势。</p><div class="tags"><span class="tag">情感</span><span class="tag">选择</span><span class="tag">趋势</span></div></article>
+      <article class="panel service-card"><div class="icon">◇</div><h3>雷诺曼解读</h3><p>偏事件线索、现实路径、人物关系与具体进展。</p><div class="tags"><span class="tag">事件线</span><span class="tag">细节</span></div></article>
+      <article class="panel service-card"><div class="icon">柱</div><h3>八字命理</h3><p>命局五行、十神结构、流年节律与长期规划。</p><div class="tags"><span class="tag">命局</span><span class="tag">流年</span><span class="tag">规划</span></div></article>
+      <article class="panel service-card"><div class="icon">易</div><h3>梅花易数</h3><p>以时间、数字、外应取象，适合快速问事。</p><div class="tags"><span class="tag">取象</span><span class="tag">问事</span></div></article>
+      <article class="panel service-card"><div class="icon">莲</div><h3>佛学视角梳理</h3><p>从因缘、执念、观照与心性角度整理当下困扰。</p><div class="tags"><span class="tag">观照</span><span class="tag">安顿</span></div></article>
+      <article class="panel service-card"><div class="icon">合</div><h3>组合深度咨询</h3><p>塔罗、八字、雷诺曼交叉判断复杂问题。</p><div class="tags"><span class="tag">综合</span><span class="tag">深度</span></div></article>
+    </div>
+  </section>
+
+  <section class="scene" id="scene-booking">
+    <div class="section-head"><div class="kicker">Booking Signal</div><h2 class="title">预约占卜</h2><p class="desc">每天晚上 18:00 到 22:00 可预约。填写后生成一张预约信笺，复制发送给玄栩确认。</p></div>
+    <div class="grid cols2">
+      <article class="panel">
+        <h3>填写委托</h3>
+        <form class="form" id="bookingForm">
+          <label>你的称呼<input id="bookName" placeholder="例如：小林" required></label>
+          <label>咨询项目<select id="bookType"><option>塔罗牌咨询</option><option>雷诺曼解读</option><option>八字命理</option><option>梅花易数</option><option>组合深度咨询</option></select></label>
+          <label>预约日期<input type="date" id="bookDate" required></label>
+          <label>选择时间段</label><div class="slot-grid" id="slotGrid"></div>
+          <label>想问的问题<textarea id="bookQuestion" placeholder="请写下背景、关系、时间范围，以及你最想知道的核心问题。"></textarea></label>
+          <button class="btn primary" type="submit">生成预约信笺</button>
+        </form>
+      </article>
+      <article class="letter">
+        <h3>预约信笺</h3>
+        <div class="result" id="bookingResult">填写左侧信息后，这里会生成可复制的预约内容。</div>
+        <div class="actions" style="margin-top:16px"><button class="btn primary" id="copyBooking" type="button">复制信笺</button><button class="btn" data-scene="contact" type="button">查看联系方式</button></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="scene" id="scene-tarot">
+    <div class="section-head"><div class="kicker">Tarot Canvas Ritual</div><h2 class="title">塔罗仪式装置</h2><p class="desc">这里的牌桌本身是一块 canvas。点击牌背，能量粒子会聚拢、爆发，然后牌面翻出。三张牌可理解为“根源 / 现状 / 建议”。</p></div>
+    <div class="ritual">
+      <article class="panel">
+        <h3>能量牌桌</h3>
+        <div class="ritual-canvas-wrap">
+          <canvas id="ritualCanvas"></canvas>
+          <button class="deck-button" id="deckBtn" aria-label="抽取塔罗牌"><span>☽</span></button>
+        </div>
+        <div class="actions" style="margin-top:16px"><button class="btn primary" id="drawOne">抽一张</button><button class="btn" id="drawThree">三张牌阵</button><button class="btn ghost" id="clearDraw">清空</button></div>
+      </article>
+      <article class="panel">
+        <h3>牌面结果</h3>
+        <div class="draw-area" id="drawArea"></div>
+      </article>
+    </div>
+    <article class="panel" style="margin-top:20px">
+      <h3>78 张牌库</h3>
+      <div class="library-tools"><input id="cardSearch" placeholder="搜索牌名或关键词：恋人、宝剑、事业、关系..." /><button class="btn" id="resetSearch">重置</button></div>
+      <div class="tarot-library" id="tarotLibrary"></div>
+    </article>
+  </section>
+
+  <section class="scene" id="scene-lenormand">
+    <div class="section-head"><div class="kicker">Lenormand Signal</div><h2 class="title">雷诺曼三线索</h2><p class="desc">点击抽取三个现实符号，观察“人、事、路径”的组合。页面背景会同步变成三角符号阵。</p></div>
+    <article class="panel">
+      <div class="actions" style="margin-bottom:18px"><button class="btn primary" id="drawLeno">抽取线索</button><button class="btn ghost" id="clearLeno">清空</button></div>
+      <div class="leno-board" id="lenoBoard"></div>
+    </article>
+  </section>
+
+  <section class="scene" id="scene-bazi">
+    <div class="section-head"><div class="kicker">BaZi Star Chart</div><h2 class="title">八字星盘</h2><p class="desc">输入公历出生时间，生成四柱与五行分布。页面背景会变成四象星盘结构，像一台命局观测仪。</p></div>
+    <div class="bazi">
+      <article class="panel">
+        <h3>出生信息</h3>
+        <form class="form" id="baziForm">
+          <label>称呼<input id="baziName" placeholder="例如：来访者"></label>
+          <label>性别/称谓<select id="baziGender"><option>不填写</option><option>女</option><option>男</option><option>其他</option></select></label>
+          <label>公历出生日期与时间<input type="datetime-local" id="birthDateTime" required></label>
+          <label>出生地/备注<input id="birthPlace" placeholder="例如：北京，可备注是否需要真太阳时校正"></label>
+          <button class="btn primary" type="submit">生成八字星盘</button>
+        </form>
+      </article>
+      <article class="panel">
+        <h3>命局星盘</h3>
+        <div class="astro">
+          <div class="pillar p-year"><small>年柱</small><b>--</b><span>--</span></div><div class="pillar p-month"><small>月柱</small><b>--</b><span>--</span></div>
+          <div class="pillar p-day"><small>日柱</small><b>--</b><span>--</span></div><div class="pillar p-hour"><small>时柱</small><b>--</b><span>--</span></div><div class="center">命</div>
+        </div>
+        <div class="result" id="baziIntro">请填写出生时间后生成。</div>
+        <h3 style="margin-top:18px">五行分布</h3><div class="bars" id="elementBars"></div>
+        <div class="result" id="baziAdvice" style="margin-top:16px">生成后显示简要提示。</div>
+      </article>
+    </div>
+  </section>
+
+  <section class="scene" id="scene-contact">
+    <div class="section-head"><div class="kicker">Contact</div><h2 class="title">联系玄栩</h2><p class="desc">发送预约信笺时，建议包含：称呼、咨询项目、预约时间、问题背景、是否需要八字排盘。</p></div>
+    <div class="grid cols2">
+      <article class="panel"><h3>联系方式</h3><div class="contact"><div class="contact-item"><div><b>微信</b><span>Xiangxutarot</span></div><button class="btn small" data-copy="Xiangxutarot">复制</button></div><div class="contact-item"><div><b>QQ</b><span>2726897200</span></div><button class="btn small" data-copy="2726897200">复制</button></div><div class="contact-item"><div><b>抖音号</b><span>1279819076a</span></div><button class="btn small" data-copy="1279819076a">复制</button></div></div></article>
+      <article class="panel"><h3>咨询前准备</h3><div class="steps"><div class="step"><div class="num">问</div><div><b>把问题写具体</b><span>例如“未来三个月我和某人的关系趋势如何？”比“我们会怎样？”更容易落地。</span></div></div><div class="step"><div class="num">时</div><div><b>确认晚间档期</b><span>预约时段为 18:00-22:00，可提前发送预约信笺。</span></div></div><div class="step"><div class="num">心</div><div><b>答案是地图</b><span>咨询提供观察与建议，最终选择权仍在你手里。</span></div></div></div></article>
+    </div>
+  </section>
+</main>
+
+<footer class="shell">© <span id="yearNow"></span> 玄栩 · Active Oracle Installation · Tarot / Lenormand / BaZi / 梅花易数</footer>
+
+<div class="modal" id="cardModal"><div class="modal-card"><button class="btn close" id="modalClose">关闭</button><div class="modal-body" id="modalBody"></div></div></div>
+<div class="toast" id="toast">已复制</div>
+
+<script>
+const $=(s,p=document)=>p.querySelector(s);
+const $$=(s,p=document)=>Array.from(p.querySelectorAll(s));
+
+const scenes=[
+  {id:"home",label:"入口",c1:"#5bf0ff",c2:"#f4ce7a",shape:"spiral"},
+  {id:"about",label:"关于",c1:"#7dffd6",c2:"#5bf0ff",shape:"waves"},
+  {id:"services",label:"咨询",c1:"#9b6dff",c2:"#5bf0ff",shape:"grid"},
+  {id:"booking",label:"预约",c1:"#f4ce7a",c2:"#5bf0ff",shape:"letter"},
+  {id:"tarot",label:"塔罗",c1:"#5bf0ff",c2:"#9b6dff",shape:"cards"},
+  {id:"lenormand",label:"雷诺曼",c1:"#ff8ec7",c2:"#f4ce7a",shape:"triangle"},
+  {id:"bazi",label:"八字",c1:"#7dffd6",c2:"#f4ce7a",shape:"bazi"},
+  {id:"contact",label:"联系",c1:"#5bf0ff",c2:"#7dffd6",shape:"orbit"}
+];
+let current=0;
+$("#rail").innerHTML=scenes.map((s,i)=>`<button class="rail-dot ${i===0?"active":""}" data-scene="${s.id}" title="${s.label}"></button>`).join("");
+
+function setScene(id){
+  const idx=scenes.findIndex(s=>s.id===id);
+  if(idx<0)return;
+  current=idx;
+  $$(".scene").forEach(x=>x.classList.remove("active"));
+  $("#scene-"+id).classList.add("active");
+  $$("[data-scene]").forEach(x=>x.classList.toggle("active",x.dataset.scene===id));
+  $$(".rail-dot").forEach((x,i)=>x.classList.toggle("active",i===idx));
+  $("#nav").classList.remove("open");
+  history.replaceState(null,"","#"+id);
+  world.morph(scenes[idx]);
+  burst(innerWidth*.5,innerHeight*.48,34,scenes[idx].c1);
+  scrollTo({top:0,behavior:"smooth"});
+}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-scene]");if(b){e.preventDefault();setScene(b.dataset.scene)}});
+$("#menu").addEventListener("click",()=>$("#nav").classList.toggle("open"));
+addEventListener("hashchange",()=>setScene(location.hash.slice(1)||"home"));
+$("#yearNow").textContent=new Date().getFullYear();
+
+let wheelLock=false;
+addEventListener("wheel",e=>{
+  if(["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName))return;
+  if(Math.abs(e.deltaY)<60||wheelLock)return;
+  wheelLock=true;setTimeout(()=>wheelLock=false,700);
+  const next=(current+(e.deltaY>0?1:-1)+scenes.length)%scenes.length;
+  setScene(scenes[next].id);
+},{passive:true});
+
+const cdot=$("#cdot"),cring=$("#cring");
+let mouse={x:innerWidth/2,y:innerHeight/2,px:innerWidth/2,py:innerHeight/2,down:false};
+addEventListener("pointermove",e=>{mouse.px=mouse.x;mouse.py=mouse.y;mouse.x=e.clientX;mouse.y=e.clientY;cdot.style.left=e.clientX+"px";cdot.style.top=e.clientY+"px";cring.style.left=e.clientX+"px";cring.style.top=e.clientY+"px"});
+addEventListener("pointerdown",e=>{mouse.down=true;cring.classList.add("hot");burst(e.clientX,e.clientY,46,scenes[current].c1)});
+addEventListener("pointerup",()=>{mouse.down=false;cring.classList.remove("hot")});
+document.addEventListener("mouseover",e=>{if(e.target.closest("button,a,input,textarea,select,.mini-card,.panel"))cring.classList.add("hot")});
+document.addEventListener("mouseout",e=>{if(e.target.closest("button,a,input,textarea,select,.mini-card,.panel"))cring.classList.remove("hot")});
+
+const canvas=$("#world"),ctx=canvas.getContext("2d");
+let W=innerWidth,H=innerHeight,DPR=Math.min(devicePixelRatio||1,2);
+function resize(){W=innerWidth;H=innerHeight;DPR=Math.min(devicePixelRatio||1,2);canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);world.morph(scenes[current])}
+addEventListener("resize",resize);
+
+function hexToRgb(hex){hex=hex.replace("#","");return {r:parseInt(hex.slice(0,2),16),g:parseInt(hex.slice(2,4),16),b:parseInt(hex.slice(4,6),16)}}
+function rgba(hex,a){const c=hexToRgb(hex);return `rgba(${c.r},${c.g},${c.b},${a})`}
+function noise(x,y,t){return Math.sin(x*.011+t)*Math.cos(y*.013-t*.7)+Math.sin((x+y)*.006+t*.33)}
+function targetsFor(shape,n){
+  const pts=[],cx=W*.5,cy=H*.48,scale=Math.min(W,H);
+  for(let i=0;i<n;i++){
+    let x=cx,y=cy,a=i/n*Math.PI*2;
+    if(shape==="spiral"){const r=scale*.035+i/n*scale*.36;x=cx+Math.cos(a*4.2)*r;y=cy+Math.sin(a*4.2)*r*.72}
+    if(shape==="waves"){x=W*(.12+.76*(i/n));y=cy+Math.sin(i*.18)*scale*.16+Math.sin(i*.043)*scale*.07}
+    if(shape==="grid"){const cols=Math.ceil(Math.sqrt(n*1.6)),rows=Math.ceil(n/cols),col=i%cols,row=Math.floor(i/cols);x=W*(.18+.64*col/(cols-1));y=H*(.18+.58*row/(rows-1))}
+    if(shape==="letter"){const row=Math.floor(i/24),col=i%24;x=W*(.28+.44*col/23);y=H*(.22+.50*row/(Math.ceil(n/24)-1));if(i%24===0||i%24===23||row===0||row===Math.ceil(n/24)-1)y+=Math.sin(i)*8}
+    if(shape==="cards"){const card=Math.floor(i/(n/3)),local=(i%(n/3))/(n/3),xx=[.31,.5,.69][card]||.5;const yy=.42+Math.sin(local*Math.PI*2)*.18;x=W*xx+Math.cos(local*Math.PI*2)*70;y=H*yy+local*H*.22}
+    if(shape==="triangle"){const side=i%3,t=Math.floor(i/3)/(n/3);const p=[[.5,.18],[.18,.72],[.82,.72]];const p1=p[side],p2=p[(side+1)%3];x=W*(p1[0]+(p2[0]-p1[0])*t);y=H*(p1[1]+(p2[1]-p1[1])*t)}
+    if(shape==="bazi"){const q=i%4,local=Math.floor(i/4)/(n/4),centers=[[.5,.18],[.82,.5],[.5,.78],[.18,.5]],r=scale*(.05+local*.13);x=W*centers[q][0]+Math.cos(local*Math.PI*2)*r;y=H*centers[q][1]+Math.sin(local*Math.PI*2)*r}
+    if(shape==="orbit"){const r=scale*(.10+.28*((i%60)/60));x=cx+Math.cos(a*2.4)*r;y=cy+Math.sin(a*2.4)*r}
+    pts.push({x,y});
+  }
+  return pts;
+}
+const glyphs="玄栩塔罗雷诺曼八字梅花易数☽☉✦◇✧✺";
+const world={
+  particles:[],bursts:[],trails:[],scene:scenes[0],targets:[],
+  init(){
+    this.particles=Array.from({length:260},(_,i)=>({x:Math.random()*W,y:Math.random()*H,vx:0,vy:0,r:Math.random()*1.8+.5,a:Math.random()*.7+.25,t:i}));
+    this.morph(this.scene);
+  },
+  morph(scene){this.scene=scene;this.targets=targetsFor(scene.shape,this.particles.length);},
+  draw(){
+    ctx.fillStyle="rgba(2,4,11,.18)";ctx.fillRect(0,0,W,H);
+    const g=ctx.createRadialGradient(mouse.x,mouse.y,0,mouse.x,mouse.y,Math.min(W,H)*.55);
+    g.addColorStop(0,rgba(this.scene.c1,.10));g.addColorStop(.45,rgba(this.scene.c2,.045));g.addColorStop(1,"rgba(2,4,11,0)");
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+
+    this.trails.push({x:mouse.x,y:mouse.y,px:mouse.px,py:mouse.py,life:1});
+    this.trails=this.trails.filter(t=>(t.life-=.035)>0);
+    this.trails.forEach(t=>{ctx.strokeStyle=rgba(this.scene.c1,t.life*.38);ctx.lineWidth=1+t.life*3;ctx.beginPath();ctx.moveTo(t.px,t.py);ctx.lineTo(t.x,t.y);ctx.stroke()});
+
+    for(let i=0;i<this.particles.length;i++){
+      const p=this.particles[i],tar=this.targets[i]||{x:W/2,y:H/2};
+      const n=noise(p.x,p.y,performance.now()*.00045);
+      p.vx+=(tar.x-p.x)*.006+Math.cos(n*Math.PI)*.08;
+      p.vy+=(tar.y-p.y)*.006+Math.sin(n*Math.PI)*.08;
+      const dx=p.x-mouse.x,dy=p.y-mouse.y,d=Math.hypot(dx,dy);
+      if(d<180){const f=(180-d)/180*(mouse.down?1.5:.55);p.vx+=dx/(d||1)*f;p.vy+=dy/(d||1)*f}
+      p.vx*=.91;p.vy*=.91;p.x+=p.vx;p.y+=p.vy;
+    }
+    for(let i=0;i<this.particles.length;i+=2){
+      const p=this.particles[i];
+      for(let j=i+7;j<this.particles.length;j+=19){
+        const q=this.particles[j],d=Math.hypot(p.x-q.x,p.y-q.y);
+        if(d<116){ctx.strokeStyle=rgba(this.scene.c1,(1-d/116)*.12);ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(q.x,q.y);ctx.stroke()}
+      }
+    }
+    this.particles.forEach((p,i)=>{
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=i%7===0?rgba(this.scene.c2,p.a):rgba(this.scene.c1,p.a);ctx.fill();
+      if(i%53===0){ctx.font="16px serif";ctx.fillStyle=rgba(this.scene.c2,.35);ctx.fillText(glyphs[(i+current)%glyphs.length],p.x+8,p.y-8)}
+    });
+    this.bursts=this.bursts.filter(b=>(b.life-=.018)>0);
+    this.bursts.forEach(b=>{
+      b.x+=b.vx;b.y+=b.vy;b.vy+=.01;
+      ctx.save();ctx.translate(b.x,b.y);ctx.rotate(b.rot+=b.spin);ctx.globalAlpha=Math.max(0,b.life);
+      ctx.font=`${b.size}px serif`;ctx.fillStyle=b.color;ctx.fillText(b.g,-b.size*.35,b.size*.35);ctx.restore();
+    });
+    requestAnimationFrame(()=>this.draw());
+  }
+};
+function burst(x,y,count=32,color="#5bf0ff"){
+  for(let i=0;i<count;i++){
+    const a=Math.random()*Math.PI*2,sp=Math.random()*3+1;
+    world.bursts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,rot:Math.random()*6,spin:(Math.random()-.5)*.08,size:Math.random()*20+12,g:glyphs[Math.floor(Math.random()*glyphs.length)],color:rgba(color,.85)});
+  }
+}
+resize();world.init();world.draw();
+
+const tilt=$("#tilt");
+tilt.addEventListener("pointermove",e=>{const r=tilt.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;tilt.style.transform=`rotateY(${x*10}deg) rotateX(${-y*10}deg)`});
+tilt.addEventListener("pointerleave",()=>tilt.style.transform="");
+
+function toast(t="已复制到剪贴板"){const el=$("#toast");el.textContent=t;el.classList.add("show");clearTimeout(window.__toast);window.__toast=setTimeout(()=>el.classList.remove("show"),1700)}
+async function copyText(t){try{await navigator.clipboard.writeText(t);toast()}catch{toast("请手动复制")}}
+document.addEventListener("click",e=>{const b=e.target.closest("[data-copy]");if(b)copyText(b.dataset.copy)});
+
+const slots=["18:00","18:30","19:00","19:30","20:00","20:30","21:00","21:30"];
+let selectedSlot=slots[0];
+$("#slotGrid").innerHTML=slots.map((s,i)=>`<button class="slot ${i===0?"selected":""}" type="button" data-slot="${s}">${s}</button>`).join("");
+$("#slotGrid").addEventListener("click",e=>{const b=e.target.closest(".slot");if(!b)return;selectedSlot=b.dataset.slot;$$(".slot").forEach(x=>x.classList.remove("selected"));b.classList.add("selected");burst(e.clientX,e.clientY,22,"#f4ce7a")});
+const d=new Date(),today=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+$("#bookDate").min=today;$("#bookDate").value=today;
+$("#bookingForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const name=$("#bookName").value.trim()||"未填写",type=$("#bookType").value,date=$("#bookDate").value,q=$("#bookQuestion").value.trim()||"想现场补充";
+  const text=`玄栩你好，我想预约咨询。\n称呼：${name}\n项目：${type}\n时间：${date} ${selectedSlot}\n问题：${q}\n我会通过微信 Xiangxutarot 或 QQ 2726897200 与你确认。`;
+  $("#bookingResult").textContent=text;localStorage.setItem("xuanxu_active_booking",text);toast("预约信笺已生成");burst(innerWidth*.72,innerHeight*.45,42,"#f4ce7a");
+});
+$("#copyBooking").addEventListener("click",()=>{const t=$("#bookingResult").textContent.trim();if(t.includes("填写左侧"))return toast("请先生成信笺");copyText(t)});
+if(localStorage.getItem("xuanxu_active_booking"))$("#bookingResult").textContent=localStorage.getItem("xuanxu_active_booking");
+
+const major=[
+["愚者","The Fool","新开始、冒险、自由、未知旅程","带着轻盈出发，但别忘了看脚下。","☄"],["魔术师","The Magician","显化、资源、行动力、沟通","你已经握有工具，关键是整合与执行。","✧"],["女祭司","The High Priestess","直觉、秘密、潜意识、等待","答案在水面下，先观察。","☾"],["皇后","The Empress","滋养、丰盛、关系、创造","温柔和稳定会让事情慢慢生长。","♀"],["皇帝","The Emperor","秩序、责任、边界、掌控","建立规则，清晰地给出立场。","♔"],["教皇","The Hierophant","传统、学习、承诺、体系","向成熟体系请教，别独自硬闯。","⚜"],["恋人","The Lovers","选择、关系、价值观、吸引","真正的问题是你愿意选择哪一种价值。","♡"],["战车","The Chariot","推进、胜利、自律、方向","统一意志之后，事情会被推上轨道。","♞"],["力量","Strength","勇气、耐心、柔性掌控","用温和驯服冲突，不必用蛮力证明自己。","∞"],["隐士","The Hermit","独处、内省、寻道、慢下来","安静会带来答案。","♟"],["命运之轮","Wheel of Fortune","转机、周期、变化、命运","局势正在转动，顺势比强控有效。","☸"],["正义","Justice","公平、因果、契约、判断","看事实、证据与长期后果。","⚖"],["倒吊人","The Hanged Man","暂停、换位、牺牲、重估","卡住要求你换一种看法。","♁"],["死神","Death","结束、转化、清理、重生","旧模式退场，新生活才有位置。","✟"],["节制","Temperance","调和、疗愈、平衡、整合","慢慢调配，答案在中道里。","⚗"],["恶魔","The Devil","执念、欲望、束缚、成瘾","看清被什么牵动，选择权才会回来。","♆"],["高塔","The Tower","突变、破局、真相、崩塌","不稳的结构会先倒下。","⚡"],["星星","The Star","希望、疗愈、灵感、祝福","保留信念，长线愿望仍有光。","☆"],["月亮","The Moon","迷雾、情绪、梦境、不安","不要在情绪最浓时下终局判断。","☽"],["太阳","The Sun","成功、清晰、喜悦、公开","事情会更明朗。","☀"],["审判","Judgement","召唤、复盘、觉醒、决定","过去的回声要求你成熟回应。","✺"],["世界","The World","完成、圆满、阶段成果、远方","一个周期抵达终点。","◎"]
+];
+const suitInfo={权杖:["Wands","♣","行动、热情、事业推进","把想法落到行动，火候到了就别拖延。"],圣杯:["Cups","♥","情感、关系、直觉流动","感受很重要，也要看对方是否真实回应。"],宝剑:["Swords","♠","思想、沟通、冲突与判断","用清晰语言切开迷雾，避免内耗。"],星币:["Pentacles","◆","金钱、现实、身体与积累","关注可持续性，现实资源会说明很多。"]};
+const ranks=[["Ace","一","种子、开始、潜力"],["Two","二","选择、平衡、互动"],["Three","三","合作、扩展、初步成果"],["Four","四","稳定、停顿、防守"],["Five","五","冲突、变化、损耗"],["Six","六","调整、回馈、过渡"],["Seven","七","挑战、策略、坚持"],["Eight","八","速度、练习、推进"],["Nine","九","临界、成果、疲惫"],["Ten","十","完成、负荷、循环收束"],["Page","侍从","消息、学习、新手能量"],["Knight","骑士","行动、追求、变化"],["Queen","皇后","成熟感受、接纳、内在掌控"],["King","国王","权威、统筹、外在掌控"]];
+function enc(svg){return "data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(svg)}
+function cardSvg(c){
+  const hue=c.type==="major"?205+(c.id*6)%86:({权杖:212,圣杯:190,宝剑:235,星币:170}[c.suit]||210);
+  const name=c.cn.length>5?c.cn.slice(0,5):c.cn;
+  return enc(`<svg xmlns="http://www.w3.org/2000/svg" width="420" height="690" viewBox="0 0 420 690"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="hsl(${hue},92%,16%)"/><stop offset=".56" stop-color="hsl(${hue+18},78%,31%)"/><stop offset="1" stop-color="#02040b"/></linearGradient><radialGradient id="r" cx="50%" cy="35%" r="55%"><stop stop-color="#eafaff" stop-opacity=".82"/><stop offset=".45" stop-color="#5bf0ff" stop-opacity=".18"/><stop offset="1" stop-color="#02040b" stop-opacity="0"/></radialGradient><filter id="glow"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><rect width="420" height="690" rx="38" fill="url(#g)"/><rect x="20" y="20" width="380" height="650" rx="29" fill="none" stroke="#f4ce7a" stroke-opacity=".58" stroke-width="2"/><rect x="39" y="42" width="342" height="606" rx="22" fill="none" stroke="#d9f8ff" stroke-opacity=".25"/><circle cx="210" cy="254" r="156" fill="url(#r)"/><g opacity=".30" stroke="#eafaff"><path d="M210 72 L240 218 L382 248 L240 278 L210 424 L180 278 L38 248 L180 218 Z" fill="none"/><circle cx="210" cy="248" r="112" fill="none"/><circle cx="210" cy="248" r="62" fill="none"/></g><text x="210" y="268" text-anchor="middle" dominant-baseline="middle" font-size="110" fill="#f4ce7a" filter="url(#glow)">${c.symbol}</text><text x="210" y="82" text-anchor="middle" font-size="23" fill="#dff8ff" font-family="serif" letter-spacing="5">${c.type==="major"?"MAJOR ARCANA":c.suit}</text><text x="210" y="480" text-anchor="middle" font-size="46" fill="#fff" font-family="serif" font-weight="700">${name}</text><text x="210" y="526" text-anchor="middle" font-size="23" fill="#aeeaff" font-family="serif">${c.en}</text><text x="210" y="604" text-anchor="middle" font-size="18" fill="#f4ce7a" font-family="serif" letter-spacing="4">XUANXU ORACLE</text></svg>`);
+}
+const tarot=[...major.map((m,i)=>({id:i,type:"major",suit:"大阿卡纳",cn:m[0],en:m[1],keywords:m[2],advice:m[3],symbol:m[4]})),...Object.keys(suitInfo).flatMap((s,si)=>ranks.map((r,ri)=>({id:22+si*14+ri,type:"minor",suit:s,cn:s+r[1],en:`${r[0]} of ${suitInfo[s][0]}`,keywords:`${suitInfo[s][2]}；${r[2]}`,advice:suitInfo[s][3],symbol:suitInfo[s][1]})))].map(c=>({...c,img:cardSvg(c)}));
+function searchUrl(c){return `https://www.baidu.com/s?wd=${encodeURIComponent("塔罗牌 "+c.cn+" "+c.en+" 解析")}`}
+
+const rcan=$("#ritualCanvas"),rctx=rcan.getContext("2d");
+let RW=1,RH=1,ritualDots=[];
+function resizeRitual(){const box=rcan.parentElement.getBoundingClientRect();RW=box.width;RH=box.height;rcan.width=RW*DPR;rcan.height=RH*DPR;rctx.setTransform(DPR,0,0,DPR,0,0);ritualDots=Array.from({length:80},()=>({x:Math.random()*RW,y:Math.random()*RH,a:Math.random()*Math.PI*2,r:Math.random()*2+1,s:Math.random()*.9+.2}))}
+addEventListener("resize",resizeRitual);resizeRitual();
+function drawRitual(){
+  rctx.clearRect(0,0,RW,RH);
+  const cx=RW/2,cy=RH/2,t=performance.now()*.001;
+  rctx.strokeStyle="rgba(91,240,255,.18)";rctx.lineWidth=1;
+  for(let i=0;i<5;i++){rctx.beginPath();rctx.arc(cx,cy,80+i*45,0,Math.PI*2);rctx.stroke()}
+  ritualDots.forEach((p,i)=>{p.a+=.004*p.s;const rr=90+(i%5)*45+Math.sin(t+p.s*4)*10;const x=cx+Math.cos(p.a+t*.13)*rr,y=cy+Math.sin(p.a+t*.09)*rr*.72;rctx.beginPath();rctx.arc(x,y,p.r,0,Math.PI*2);rctx.fillStyle=i%7===0?"rgba(244,206,122,.72)":"rgba(91,240,255,.68)";rctx.fill()});
+  requestAnimationFrame(drawRitual);
+}
+drawRitual();
+
+function drawTarot(n){
+  $("#deckBtn").classList.add("shake");setTimeout(()=>$("#deckBtn").classList.remove("shake"),1100);
+  burst(innerWidth*.32,innerHeight*.45,58,"#5bf0ff");
+  const pool=[...tarot],res=[];
+  for(let i=0;i<n;i++){const idx=Math.floor(Math.random()*pool.length);res.push({card:pool.splice(idx,1)[0],rev:Math.random()>.64})}
+  setTimeout(()=>renderDraw(res),520);
+}
+function renderDraw(res){
+  const pos=res.length===3?["根源","现状","建议"]:["今日讯息"];
+  $("#drawArea").innerHTML=res.map((it,i)=>`<article class="drawn ${it.rev?"reversed":""}"><img class="card-img" src="${it.card.img}" alt="${it.card.cn} 牌图"><div class="meta"><span>${pos[i]}</span><span>${it.rev?"逆位":"正位"}</span></div><h4>${it.card.cn}</h4><p><b>关键词：</b>${it.card.keywords}</p><p><b>提示：</b>${it.rev?"能量受阻，需要反向审视。":""}${it.card.advice}</p><div class="tags"><button class="btn small" onclick="openCard(${it.card.id})">详情</button><a class="btn small" target="_blank" rel="noreferrer" href="${searchUrl(it.card)}">网络解析</a></div></article>`).join("");
+}
+$("#deckBtn").addEventListener("click",()=>drawTarot(1));
+$("#drawOne").addEventListener("click",()=>drawTarot(1));$("#drawThree").addEventListener("click",()=>drawTarot(3));$("#clearDraw").addEventListener("click",()=>$("#drawArea").innerHTML="");
+function renderLib(list=tarot){$("#tarotLibrary").innerHTML=list.map(c=>`<button class="mini-card" onclick="openCard(${c.id})"><img src="${c.img}" alt="${c.cn}"><span>${c.cn}</span></button>`).join("")}
+renderLib();
+$("#cardSearch").addEventListener("input",e=>{const q=e.target.value.trim().toLowerCase();renderLib(tarot.filter(c=>(c.cn+c.en+c.keywords+c.suit).toLowerCase().includes(q)))});
+$("#resetSearch").addEventListener("click",()=>{$("#cardSearch").value="";renderLib()});
+window.openCard=function(id){const c=tarot.find(x=>x.id===id);if(!c)return;$("#modalBody").innerHTML=`<img src="${c.img}" alt="${c.cn}"><div><div class="kicker">${c.suit}</div><h2 class="title" style="font-size:44px;margin-bottom:6px">${c.cn}</h2><p class="desc" style="margin-top:0">${c.en}</p><div class="result"><b>网络常见关键词：</b><br>${c.keywords}</div><div class="result" style="margin-top:12px"><b>玄栩提示：</b><br>${c.advice}</div><div class="tags"><a class="btn primary" target="_blank" rel="noreferrer" href="${searchUrl(c)}">打开网络解析</a></div></div>`;$("#cardModal").classList.add("active");burst(innerWidth*.5,innerHeight*.5,34,"#f4ce7a")}
+$("#modalClose").addEventListener("click",()=>$("#cardModal").classList.remove("active"));$("#cardModal").addEventListener("click",e=>{if(e.target.id==="cardModal")$("#cardModal").classList.remove("active")});
+
+const leno=[["骑士","🐎","消息抵达、行动、有人靠近"],["三叶草","☘️","小幸运、机会、短期转机"],["船","⛵","远方、移动、跨地域进展"],["房子","🏠","家庭、安全感、根基"],["树","🌳","健康、长期成长、根源"],["云","☁️","不确定、迷雾、信息不明"],["蛇","🐍","复杂关系、诱惑、绕路"],["棺材","⚰️","结束、收尾、停滞"],["花束","💐","礼物、赞美、愉悦"],["镰刀","🌙","切断、突发、快速决定"],["鞭子","〰️","争执、重复、压力"],["鸟","🐦","交流、焦虑、双人对话"],["孩子","🧒","新开始、天真、小事"],["狐狸","🦊","策略、工作、谨慎"],["熊","🐻","力量、资源、保护者"],["星星","✨","愿望、灵感、指引"],["鹳","🪽","变化、搬动、更新"],["狗","🐕","朋友、忠诚、陪伴"],["塔","🗼","距离、机构、边界"],["花园","🌿","社交、公开、人群"],["山","⛰️","阻碍、延迟、难题"],["路","🛤️","选择、分岔、决定"],["老鼠","🐁","消耗、焦虑、流失"],["心","💙","感情、喜欢、柔软"],["戒指","💍","承诺、契约、循环"],["书","📘","秘密、学习、未知"],["信","✉️","消息、文件、回复"],["男人","♂","男性能量、当事人"],["女人","♀","女性能量、当事人"],["百合","⚜️","成熟、平和、长辈"],["太阳","☀️","成功、公开、积极"],["月亮","🌙","名声、情绪、潜意识"],["钥匙","🗝️","答案、突破、关键"],["鱼","🐟","金钱、流动、资源"],["锚","⚓","稳定、长期、停靠"],["十字架","✝️","压力、课题、宿命感"]];
+function drawLeno(){const pool=[...leno],out=[];for(let i=0;i<3;i++)out.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);$("#lenoBoard").innerHTML=out.map((x,i)=>`<article class="leno" style="animation-delay:${i*.08}s"><div class="kicker">Signal ${i+1}</div><div class="big">${x[1]}</div><h3>${x[0]}</h3><p>${x[2]}</p></article>`).join("");burst(innerWidth*.5,innerHeight*.45,44,"#ff8ec7")}
+$("#drawLeno").addEventListener("click",drawLeno);$("#clearLeno").addEventListener("click",()=>$("#lenoBoard").innerHTML="");
+
+const stems=["甲","乙","丙","丁","戊","己","庚","辛","壬","癸"],branches=["子","丑","寅","卯","辰","巳","午","未","申","酉","戌","亥"];
+const stemEl={甲:"木",乙:"木",丙:"火",丁:"火",戊:"土",己:"土",庚:"金",辛:"金",壬:"水",癸:"水"},branchEl={子:"水",丑:"土",寅:"木",卯:"木",辰:"土",巳:"火",午:"火",未:"土",申:"金",酉:"金",戌:"土",亥:"水"};
+const elText={木:"木主生发、学习、规划与成长。",火:"火主表达、热情、行动与可见度。",土:"土主承载、稳定、信任与现实资源。",金:"金主规则、判断、效率与边界。",水:"水主智慧、流动、情绪与信息。"};
+const gz=i=>stems[((i%60)+60)%60%10]+branches[((i%60)+60)%60%12];
+function jdn(date){let y=date.getFullYear(),m=date.getMonth()+1,d=date.getDate();const a=Math.floor((14-m)/12);y+=4800-a;m+=12*a-3;return d+Math.floor((153*m+2)/5)+365*y+Math.floor(y/4)-Math.floor(y/100)+Math.floor(y/400)-32045}
+function yP(date){let y=date.getFullYear();if(date<new Date(y,1,4))y--;return gz(y-1984)}
+function mIdx(date){const y=date.getFullYear(),bs=[new Date(y,1,4),new Date(y,2,6),new Date(y,3,5),new Date(y,4,6),new Date(y,5,6),new Date(y,6,7),new Date(y,7,8),new Date(y,8,8),new Date(y,9,8),new Date(y,10,7),new Date(y,11,7),new Date(y+1,0,6)];let idx=11;for(let i=0;i<bs.length;i++)if(date>=bs[i])idx=i;return idx}
+function mP(date,ys){const idx=mIdx(date),b=["寅","卯","辰","巳","午","未","申","酉","戌","亥","子","丑"],start={甲:2,己:2,乙:4,庚:4,丙:6,辛:6,丁:8,壬:8,戊:0,癸:0};return stems[(start[ys]+idx)%10]+b[idx]}
+function dP(date){return gz(jdn(date)+49)}
+function hP(date,ds){const h=date.getHours(),bi=h===23?0:Math.floor((h+1)/2)%12,start={甲:0,己:0,乙:2,庚:2,丙:4,辛:4,丁:6,壬:6,戊:8,癸:8};return stems[(start[ds]+bi)%10]+branches[bi]}
+function renderBazi(date,name,gender,place){
+  const yp=yP(date),mp=mP(date,yp[0]),dp=dP(date),hp=hP(date,dp[0]),ps=[yp,mp,dp,hp],cls=[".p-year",".p-month",".p-day",".p-hour"];
+  ps.forEach((p,i)=>{const el=$(cls[i]);$("b",el).textContent=p;$("span",el).textContent=stemEl[p[0]]+" · "+branchEl[p[1]]});
+  $("#baziIntro").textContent=`${name||"来访者"}${gender&&gender!=="不填写"?"（"+gender+"）":""}，公历 ${date.toLocaleString()}${place?"，备注："+place:""}。`;
+  const counts={木:0,火:0,土:0,金:0,水:0};ps.forEach(p=>{counts[stemEl[p[0]]]++;counts[branchEl[p[1]]]++});
+  const max=Math.max(...Object.values(counts),1);
+  $("#elementBars").innerHTML=Object.entries(counts).map(([e,c])=>`<div class="bar-row"><span>${e}</span><div class="bar"><i style="width:${c/max*100}%"></i></div><b>${c}</b></div>`).join("");
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]),strong=sorted[0][0],weak=sorted[sorted.length-1][0];
+  $("#baziAdvice").innerHTML=`<b>简要提示：</b>当前五行中 <span style="color:var(--gold)">${strong}</span> 较显，<span style="color:var(--cyan)">${weak}</span> 较弱。${elText[strong]} 若进一步分析，可结合十神、大运、流年与具体问题来看。`;
+  burst(innerWidth*.5,innerHeight*.45,52,"#7dffd6");
+}
+$("#baziForm").addEventListener("submit",e=>{e.preventDefault();const v=$("#birthDateTime").value;if(!v)return toast("请填写出生时间");renderBazi(new Date(v),$("#baziName").value.trim(),$("#baziGender").value,$("#birthPlace").value.trim());toast("八字星盘已生成")});
+setScene(location.hash.slice(1)||"home");
+</script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script type="text/javascript" src="/WattToolkit_Inject/1.js"></script></body>
+</html>
