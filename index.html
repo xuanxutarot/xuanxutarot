@@ -218,9 +218,7 @@ input:focus,select:focus,textarea:focus{border-color:rgba(91,240,255,.68);box-sh
 textarea{min-height:118px;resize:vertical}option{color:#061225}
 .form{display:grid;gap:14px}
 .slot-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.slot{
-  border:1px solid rgba(216,240,255,.18);border-radius:16px;padding:11px 8px;color:#dff7ff;background:rgba(255,255,255,.052);transition:.2s ease
-}
+.slot(border:1px solid rgba(216,240,255,.18);border-radius:16px;padding:11px 8px;color:#dff7ff;background:rgba(255,255,255,.052);transition:.2s ease}
 .slot:hover,.slot.selected{background:linear-gradient(135deg,#effdff,var(--cyan));color:#031022}
 .letter{
   position:relative;min-height:420px;border-radius:31px;padding:28px;color:#081225;
@@ -296,7 +294,7 @@ textarea{min-height:118px;resize:vertical}option{color:#061225}
 .p-year{left:50%;top:6%;transform:translateX(-50%)}.p-month{right:6%;top:50%;transform:translateY(-50%)}.p-day{left:50%;bottom:6%;transform:translateX(-50%)}.p-hour{left:6%;top:50%;transform:translateY(-50%)}
 .center{position:absolute;inset:38%;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#effdff,var(--cyan));color:#031022;font-weight:900;font-size:38px;box-shadow:0 0 48px rgba(91,240,255,.38)}
 .bars{display:grid;gap:10px}.bar-row{display:grid;grid-template-columns:42px 1fr 34px;gap:9px;align-items:center;color:#d8f2ff;font-family:var(--sans)}
-.bar{height:12px;border-radius:999px;background:rgba(255,255,255,.075);border:1px solid rgba(216,240,255,.12);overflow:hidden}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--gold));transition:width .65s ease}
+.bar{height:12px;border-radius999px;background:rgba(255,255,255,.075);border:1px solid rgba(216,240,255,.12);overflow:hidden}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--gold));transition:width .65s ease}
 .contact{display:grid;gap:12px}.contact-item{display:flex;justify-content:space-between;align-items:center;gap:12px;border:1px solid rgba(216,240,255,.16);border-radius:22px;padding:15px;background:rgba(255,255,255,.052)}
 .contact-item b{display:block}.contact-item span{display:block;color:var(--muted);font-family:var(--sans);margin-top:4px}
 .modal{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(1,4,12,.72);backdrop-filter:blur(16px)}
@@ -310,14 +308,82 @@ textarea{min-height:118px;resize:vertical}option{color:#061225}
 .rail-dot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(216,240,255,.34);background:rgba(255,255,255,.08);transition:.2s}
 .rail-dot.active{height:34px;border-radius:99px;background:linear-gradient(var(--cyan),var(--gold));border:0}
 footer{border-top:1px solid rgba(216,240,255,.12);padding:32px 0 54px;text-align:center;color:var(--muted);font-family:var(--sans)}
+
+/* --- 🪐 高级音乐播放组件核心样式 --- */
+.oracle-audio-pod {
+  position: fixed; bottom: 24px; left: 24px; z-index: 90;
+  display: flex; align-items: center; gap: 12px; padding: 10px 16px 10px 10px;
+  border: 1px solid rgba(91,240,255,0.25); border-radius: 999px;
+  background: rgba(2,6,18,0.68); backdrop-filter: blur(24px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  font-family: var(--sans); font-size: 13px; transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.audio-sigil-disc {
+  width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(circle, #0b1b42, #02040b);
+  border: 1px solid rgba(216,240,255,0.3); color: var(--cyan); font-size: 16px;
+  box-shadow: 0 0 15px rgba(91,240,255,0.2); transition: transform 0.3s ease;
+}
+.oracle-audio-pod.playing .audio-sigil-disc {
+  animation: spin 8s linear infinite; border-color: var(--cyan);
+  box-shadow: 0 0 20px rgba(91,240,255,0.4);
+}
+.audio-controls { display: flex; align-items: center; gap: 10px; }
+.audio-btn {
+  background: none; border: none; color: var(--text); padding: 4px;
+  display: grid; place-items: center; transition: all 0.2s; opacity: 0.85;
+}
+.audio-btn:hover { color: var(--cyan); transform: scale(1.08); opacity: 1; }
+.audio-info { width: 110px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.audio-info span { display: block; font-weight: 600; color: #fff; }
+.audio-info small { color: var(--muted); font-size: 11px; }
+.audio-progress-bar {
+  width: 65px; height: 3px; background: rgba(255,255,255,0.15);
+  border-radius: 99px; position: relative; cursor: pointer;
+}
+.audio-progress-fill {
+  height: 100%; width: 0%; background: linear-gradient(90deg, var(--cyan), var(--gold));
+  border-radius: 99px; pointer-events: none;
+}
+.audio-search-box {
+  width: 0; opacity: 0; overflow: hidden; display: flex; align-items: center;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.audio-search-box.open { width: 160px; opacity: 1; margin-right: 4px; }
+.audio-search-box input {
+  padding: 6px 12px; font-size: 12px; border-radius: 999px;
+  background: rgba(1, 8, 22, 0.85); border: 1px solid rgba(91,240,255,0.3);
+}
+.audio-search-results {
+  position: absolute; bottom: calc(100% + 12px); left: 0; width: 280px; max-height: 220px;
+  background: rgba(4, 11, 30, 0.95); backdrop-filter: blur(20px);
+  border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow);
+  overflow-y: auto; display: none; padding: 8px;
+}
+.audio-search-results.open { display: block; }
+.search-track-item {
+  display: flex; align-items: center; justify-content: space-between; padding: 8px 12px;
+  border-radius: 12px; cursor: pointer; transition: background 0.2s; gap: 8px;
+}
+.search-track-item:hover { background: rgba(91,240,255,0.12); }
+.search-track-item .t-info { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.search-track-item b { display: block; font-size: 12px; color: #fff; }
+.search-track-item span { font-size: 11px; color: var(--muted); }
+
 @media(max-width:1060px){
-  .topbar{grid-template-columns:1fr auto;border-radius:28px}.topbar>.btn.primary{display:none}nav{display:none;grid-column:1/-1;justify-content:flex-start}.menu{display:inline-flex}nav.open{display:flex}
+  .topbar{grid-template-columns:1fr auto;border-radius:28px}.topbar>.btn.primary{display:none}nav{display:none;grid-column:1/-1;justify-content:flex-start}
+  .menu{display:inline-flex}nav.open{display:flex}
   .hero,.ritual,.bazi,.cols2{grid-template-columns:1fr}.portal{min-height:610px}.cols3{grid-template-columns:repeat(2,1fr)}.tarot-library{grid-template-columns:repeat(5,1fr)}
 }
 @media(max-width:680px){
-  .shell{width:min(100% - 22px,1240px)}.cursor{display:none}.brand span{display:none}.hero{min-height:auto}.portal{min-height:540px}
+  .shell{width:min(100% - 22px,1240px)}.cursor{display:none}.brand span{display:none}
+  .hero{min-height:auto}.portal{min-height:540px}
   .status,.cols3,.slot-grid,.draw-area,.leno-board{grid-template-columns:1fr}.tarot-library{grid-template-columns:repeat(3,1fr)}.library-tools{grid-template-columns:1fr}
   .modal-body{grid-template-columns:1fr}.scene-rail{display:none}.ritual-canvas-wrap{height:450px}.pillar{width:82px;height:82px;border-radius:21px}.pillar b{font-size:23px}
+  .oracle-audio-pod { bottom: 14px; left: 14px; padding: 8px 12px; }
+  .audio-progress-bar, .audio-info small { display: none; }
+  .audio-info { width: 75px; }
+  .audio-search-box.open { width: 110px; }
 }
 </style>
 </head>
@@ -390,7 +456,7 @@ footer{border-top:1px solid rgba(216,240,255,.12);padding:32px 0 54px;text-align
       <article class="panel service-card"><div class="icon">柱</div><h3>八字命理</h3><p>命局五行、十神结构、流年节律与长期规划。</p><div class="tags"><span class="tag">命局</span><span class="tag">流年</span><span class="tag">规划</span></div></article>
       <article class="panel service-card"><div class="icon">易</div><h3>梅花易数</h3><p>以时间、数字、外应取象，适合快速问事。</p><div class="tags"><span class="tag">取象</span><span class="tag">问事</span></div></article>
       <article class="panel service-card"><div class="icon">莲</div><h3>佛学视角梳理</h3><p>从因缘、执念、观照与心性角度整理当下困扰。</p><div class="tags"><span class="tag">观照</span><span class="tag">安顿</span></div></article>
-      <article class="panel service-card"><div class="icon">合</div><h3>组合深度咨询</h3><p>塔罗、八字、雷诺曼交叉判断复杂问题。</p><div class="tags"><span class="tag">综合</span><span class="tag">深度</span></div></article>
+      <article class="panel service-card"><div class="icon"></div><h3>组合深度咨询</h3><p>塔罗、八字、雷诺曼交叉判断复杂问题。</p><div class="tags"><span class="tag">综合</span><span class="tag">深度</span></div></article>
     </div>
   </section>
 
@@ -481,6 +547,27 @@ footer{border-top:1px solid rgba(216,240,255,.12);padding:32px 0 54px;text-align
     </div>
   </section>
 </main>
+
+<div class="oracle-audio-pod" id="oracleAudioPod">
+  <div class="audio-sigil-disc">☽</div>
+  <div class="audio-controls">
+    <button class="audio-btn" id="audioPlayBtn" title="播放/暂停">▶</button>
+    <div class="audio-info">
+      <span id="audioTrackName">Mystery of Love</span>
+      <small id="audioTrackArtist">Sufjan Stevens</small>
+    </div>
+    <div class="audio-progress-bar" id="audioProgressBar">
+      <div class="audio-progress-fill" id="audioProgressFill"></div>
+    </div>
+    <button class="audio-btn" id="audioMuteBtn" title="静音">🔊</button>
+    <button class="audio-btn" id="audioSearchToggle" title="星轨寻音(搜索)">🔍</button>
+  </div>
+  <div class="audio-search-box" id="audioSearchBox">
+    <input type="text" id="audioSearchInput" placeholder="输入歌名/歌手..." />
+  </div>
+  <div class="audio-search-results" id="audioSearchResults"></div>
+</div>
+<audio id="oracleAudioElement" loop preload="auto"></audio>
 
 <footer class="shell">© <span id="yearNow"></span> 玄栩 · Active Oracle Installation · Tarot / Lenormand / BaZi / 梅花易数</footer>
 
@@ -691,7 +778,7 @@ $("#resetSearch").addEventListener("click",()=>{$("#cardSearch").value="";render
 window.openCard=function(id){const c=tarot.find(x=>x.id===id);if(!c)return;$("#modalBody").innerHTML=`<img src="${c.img}" alt="${c.cn}"><div><div class="kicker">${c.suit}</div><h2 class="title" style="font-size:44px;margin-bottom:6px">${c.cn}</h2><p class="desc" style="margin-top:0">${c.en}</p><div class="result"><b>网络常见关键词：</b><br>${c.keywords}</div><div class="result" style="margin-top:12px"><b>玄栩提示：</b><br>${c.advice}</div><div class="tags"><a class="btn primary" target="_blank" rel="noreferrer" href="${searchUrl(c)}">打开网络解析</a></div></div>`;$("#cardModal").classList.add("active");burst(innerWidth*.5,innerHeight*.5,34,"#f4ce7a")}
 $("#modalClose").addEventListener("click",()=>$("#cardModal").classList.remove("active"));$("#cardModal").addEventListener("click",e=>{if(e.target.id==="cardModal")$("#cardModal").classList.remove("active")});
 
-const leno=[["骑士","🐎","消息抵达、行动、有人靠近"],["三叶草","☘️","小幸运、机会、短期转机"],["船","⛵","远方、移动、跨地域进展"],["房子","🏠","家庭、安全感、根基"],["树","🌳","健康、长期成长、根源"],["云","☁️","不确定、迷雾、信息不明"],["蛇","🐍","复杂关系、诱惑、绕路"],["棺材","⚰️","结束、收尾、停滞"],["花束","💐","礼物、赞美、愉悦"],["镰刀","🌙","切断、突发、快速决定"],["鞭子","〰️","争执、重复、压力"],["鸟","🐦","交流、焦虑、双人对话"],["孩子","🧒","新开始、天真、小事"],["狐狸","🦊","策略、工作、谨慎"],["熊","🐻","力量、资源、保护者"],["星星","✨","愿望、灵感、指引"],["鹳","🪽","变化、搬动、更新"],["狗","🐕","朋友、忠诚、陪伴"],["塔","🗼","距离、机构、边界"],["花园","🌿","社交、公开、人群"],["山","⛰️","阻碍、延迟、难题"],["路","🛤️","选择、分岔、决定"],["老鼠","🐁","消耗、焦虑、流失"],["心","💙","感情、喜欢、柔软"],["戒指","💍","承诺、契约、循环"],["书","📘","秘密、学习、未知"],["信","✉️","消息、文件、回复"],["男人","♂","男性能量、当事人"],["女人","♀","女性能量、当事人"],["百合","⚜️","成熟、平和、长辈"],["太阳","☀️","成功、公开、积极"],["月亮","🌙","名声、情绪、潜意识"],["钥匙","🗝️","答案、突破、关键"],["鱼","🐟","金钱、流动、资源"],["锚","⚓","稳定、长期、停靠"],["十字架","✝️","压力、课题、宿命感"]];
+const leno=[["骑士","🐎","消息抵达、行动、有人靠近"],["三叶草","☘️","小幸运、机会、短期转机"],["船","⛵","远方、移动、跨地域进展"],["房子","🏠","家庭、安全感、根基"],["树","🌳","健康、长期成长、根源"],["云","☁️","不确定、迷雾、信息不明"],["蛇","🐍","复杂关系、诱惑、绕路"],["棺材","⚰️","结束、收尾、停滞"],["花束","💐","礼物、赞美、愉悦"],["镰刀","🌙","切断、突发、快速决定"],["鞭子","〰️","争执、重复、压力"],["鸟","🐦","交流、焦虑、双人对话"],["孩子","🧒","新开始、天真、小事"],["狐狸","🦊","策略、工作、谨慎"],["熊","🐻","力量、资源、保护者"],["星星","✨","愿望、灵感、指引"],["鹳","🪽","变化、搬动、更新"],["狗","🐕","朋友、忠诚、陪伴"],["塔","🗼","距离、机构、边界"],["花园","🌿","社交、公开、人群"],["山","⛰️","阻碍、延迟、难题"],["路","🛤️","选择、分岔、决定"],["老鼠","🐁","消耗、焦虑、流失"],["心","💙","感情、喜欢、柔软"],["戒指","💍","承诺、契约、循环"],["书","📘","秘密、学习、未知"],["信","✉️","消息、文件、回复"],["男人","♂","男女性能量、当事人"],["女人","♀","女性能量、当事人"],["百合","⚜️","成熟、平和、长辈"],["太阳","☀️","成功、公开、积极"],["月亮","🌙","名声、情绪、潜意识"],["钥匙","🗝️","答案、突破、关键"],["鱼","🐟","金钱、流动、资源"],["锚","⚓","稳定、长期、停靠"],["十字架","✝️","压力、课题、宿命感"]];
 function drawLeno(){const pool=[...leno],out=[];for(let i=0;i<3;i++)out.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);$("#lenoBoard").innerHTML=out.map((x,i)=>`<article class="leno" style="animation-delay:${i*.08}s"><div class="kicker">Signal ${i+1}</div><div class="big">${x[1]}</div><h3>${x[0]}</h3><p>${x[2]}</p></article>`).join("");burst(innerWidth*.5,innerHeight*.45,44,"#ff8ec7")}
 $("#drawLeno").addEventListener("click",drawLeno);$("#clearLeno").addEventListener("click",()=>$("#lenoBoard").innerHTML="");
 
@@ -718,6 +805,160 @@ function renderBazi(date,name,gender,place){
 }
 $("#baziForm").addEventListener("submit",e=>{e.preventDefault();const v=$("#birthDateTime").value;if(!v)return toast("请填写出生时间");renderBazi(new Date(v),$("#baziName").value.trim(),$("#baziGender").value,$("#birthPlace").value.trim());toast("八字星盘已生成")});
 setScene(location.hash.slice(1)||"home");
+
+/* --- 🪐 高级星轨音乐播放器核心交互逻辑 --- */
+const audioEl = $("#oracleAudioElement");
+const audioPod = $("#oracleAudioPod");
+const playBtn = $("#audioPlayBtn");
+const muteBtn = $("#audioMuteBtn");
+const pBar = $("#audioProgressBar");
+const pFill = $("#audioProgressFill");
+const sToggle = $("#audioSearchToggle");
+const sBox = $("#audioSearchBox");
+const sInput = $("#audioSearchInput");
+const sResults = $("#audioSearchResults");
+
+// 预设默认背景音乐：Mystery of Love (采用稳定的公开免流CDN源)
+const defaultTrack = {
+  name: "Mystery of Love",
+  artist: "Sufjan Stevens",
+  url: "https://pub-2fdef7a2969f43289c42ee5ae3412fd7.r2.dev/Mystery%20of%20Love.mp3"
+};
+
+function loadTrack(track) {
+  audioEl.src = track.url;
+  $("#audioTrackName").textContent = track.name;
+  $("#audioTrackArtist").textContent = track.artist || "神秘星轨";
+  pFill.style.width = "0%";
+}
+
+// 唤醒播放器函数
+function playAudio() {
+  audioEl.play().then(() => {
+    playBtn.textContent = "⏸";
+    audioPod.classList.add("playing");
+  }).catch(() => {
+    playBtn.textContent = "▶";
+    audioPod.classList.remove("playing");
+  });
+}
+
+function togglePlay() {
+  if (audioEl.paused) {
+    playAudio();
+  } else {
+    audioEl.pause();
+    playBtn.textContent = "▶";
+    audioPod.classList.remove("playing");
+  }
+}
+
+// 初始化加载
+loadTrack(defaultTrack);
+
+// 页面任意位置首次点击时尝试解除浏览器自动播放限制
+document.addEventListener("click", function initAudioOnFirstClick() {
+  if (audioEl.paused && !audioPod.classList.contains('playing')) {
+    playAudio();
+  }
+  document.removeEventListener("click", initAudioOnFirstClick);
+}, { once: true });
+
+playBtn.addEventListener("click", (e) => { e.stopPropagation(); togglePlay(); });
+
+muteBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  audioEl.muted = !audioEl.muted;
+  muteBtn.textContent = audioEl.muted ? "🔇" : "🔊";
+});
+
+// 进度条交互
+audioEl.addEventListener("timeupdate", () => {
+  if (audioEl.duration) {
+    pFill.style.width = (audioEl.currentTime / audioEl.duration) * 100 + "%";
+  }
+});
+
+pBar.addEventListener("click", (e) => {
+  e.stopPropagation();
+  const rect = pBar.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  if (audioEl.duration) {
+    audioEl.currentTime = pct * audioEl.duration;
+  }
+});
+
+// 搜索栏展开/关闭
+sToggle.addEventListener("click", (e) => {
+  e.stopPropagation();
+  sBox.classList.toggle("open");
+  sResults.classList.toggle("open", sBox.classList.contains("open") && sResults.children.length > 0);
+  if (sBox.classList.contains("open")) sInput.focus();
+});
+
+// 监听网络搜索输入（防抖）
+let searchTimer;
+sInput.addEventListener("input", (e) => {
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim();
+  if (!q) { sResults.innerHTML = ""; sResults.classList.remove("open"); return; }
+  
+  searchTimer = setTimeout(() => {
+    // 对接免Key的网络公开音乐搜索API进行跨域检索
+    fetch(`https://api.vkeys.cn/api/music?name=${encodeURIComponent(q)}&limit=6`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.code === 200 && data.data) {
+          sResults.innerHTML = data.data.map(track => `
+            <div class="search-track-item" data-url="${track.url}" data-name="${track.name}" data-artist="${track.singer}">
+              <div class="t-info">
+                <b>${track.name}</b>
+                <span>${track.singer}</span>
+              </div>
+              <span style="color:var(--cyan); font-size:12px;">✦</span>
+            </div>
+          `).join("");
+          sResults.classList.add("open");
+        } else {
+          sResults.innerHTML = `<div style="padding:10px;text-align:center;color:var(--muted);font-size:12px;">未能在星流中捕获到歌曲</div>`;
+          sResults.classList.add("open");
+        }
+      })
+      .catch(() => {
+        // 容错优雅提示
+        sResults.innerHTML = `<div style="padding:10px;text-align:center;color:var(--muted);font-size:12px;">星轨寻音中断，请稍后再试</div>`;
+        sResults.classList.add("open");
+      });
+  }, 400);
+});
+
+// 点击搜索结果中的歌曲进行播放
+sResults.addEventListener("click", (e) => {
+  e.stopPropagation();
+  const item = e.target.closest(".search-track-item");
+  if (!item) return;
+  const track = {
+    name: item.dataset.name,
+    artist: item.dataset.artist,
+    url: item.dataset.url
+  };
+  if (!track.url || track.url === "null") {
+    toast("该音源在深空漂泊，换一首试试");
+    return;
+  }
+  loadTrack(track);
+  playAudio();
+  sResults.classList.remove("open");
+  sBox.classList.remove("open");
+  toast(`正转播: ${track.name}`);
+});
+
+// 点击任意区域关闭搜索窗口
+document.addEventListener("click", () => {
+  sBox.classList.remove("open");
+  sResults.classList.remove("open");
+});
+audioPod.addEventListener("click", (e) => e.stopPropagation());
 </script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v833ccba57c9e4d2798f2e76cebdd09a11778172276447" integrity="sha512-57MDmcccJXYtNnH+ZiBwzC4jb2rvgVCEokYN+L/nLlmO8rfYT/gIpW2A569iJ/3b+0UEasghjuZH/ma3wIs/EQ==" data-cf-beacon='{"version":"2024.11.0","token":"7939e04a4baf43c8b86a560f74aac60e","server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script type="text/javascript" src="/WattToolkit_Inject/1.js"></script></body>
